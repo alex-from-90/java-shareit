@@ -41,7 +41,6 @@ public class InMemoryItemStorage implements ItemStorage {
 
         validateOwner(userId, item);
         updateItemProperties(item, itemUpdate);
-        itemMap.put(itemId, item);
         return item;
     }
 

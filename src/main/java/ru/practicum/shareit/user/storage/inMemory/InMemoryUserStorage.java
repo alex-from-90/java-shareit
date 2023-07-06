@@ -35,12 +35,14 @@ public class InMemoryUserStorage implements UserStorage {
         validateUserExists(userId);
         validateUserEmail(user.getEmail(), userId);
         User userUpdate = usersMap.get(userId);
-        user.setId(userId);
-        user.setName(Optional.ofNullable(user.getName()).orElse(userUpdate.getName()));
-        user.setEmail(Optional.ofNullable(user.getEmail()).orElse(userUpdate.getEmail()));
-        usersMap.put(userId, user);
+        if (user.getName() != null) {
+            userUpdate.setName(user.getName());
+        }
+        if (user.getEmail() != null) {
+            userUpdate.setEmail(user.getEmail());
+        }
         log.info("User id = {} обновлён", userId);
-        return user;
+        return userUpdate;
     }
 
     @Override

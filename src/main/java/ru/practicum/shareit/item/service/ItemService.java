@@ -28,11 +28,6 @@ public class ItemService {
                 .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
     }
 
-    private User validateAndGetUser(Long userId) {
-        return userStorage.getById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
-    }
-
-
     public ItemDto addNewItem(ItemDto itemDto, Long userId) {
         User user = validateAndGetUser(userId);
         validateItemDto(itemDto);
@@ -71,5 +66,9 @@ public class ItemService {
                 itemDto.getName().isBlank() || itemDto.getDescription().isBlank()) {
             throw new ItemBadRequestException("Попытка добавить элемент с отсутствующими полями");
         }
+    }
+
+    private User validateAndGetUser(Long userId) {
+        return userStorage.getById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
     }
 }

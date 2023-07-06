@@ -16,55 +16,24 @@ import ru.practicum.shareit.exception.users.UserNotFoundException;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler({UserBadRequestException.class, MissingRequestHeaderException.class, ItemBadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleUserBadRequestException(final UserBadRequestException e) {
+    public ErrorResponse handleBadRequestException(final RuntimeException e) {
         log.error("Bad request exception occurred: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(UserInvalidDataException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleUserDataConflictException(final UserInvalidDataException e) {
         log.warn(e.getMessage());
-        return new ErrorResponse(
-                e.getMessage()
-        );
+        return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMissingRequestHeaderException(final MissingRequestHeaderException e) {
-        log.warn(e.getMessage());
-        return new ErrorResponse(
-                e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
+    @ExceptionHandler({UserNotFoundException.class, ItemNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFoundException(final UserNotFoundException e) {
+    public ErrorResponse handleNotFoundException(final RuntimeException e) {
         log.warn(e.getMessage());
-        return new ErrorResponse(
-                e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleItemBadRequestException(final ItemBadRequestException e) {
-        log.warn(e.getMessage());
-        return new ErrorResponse(
-                e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleItemNotFoundException(final ItemNotFoundException e) {
-        log.warn(e.getMessage());
-        return new ErrorResponse(
-                e.getMessage()
-        );
+        return new ErrorResponse(e.getMessage());
     }
 }
