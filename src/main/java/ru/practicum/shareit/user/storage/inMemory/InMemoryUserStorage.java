@@ -2,8 +2,9 @@ package ru.practicum.shareit.user.storage.inMemory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.users.UserBadRequestException;
-import ru.practicum.shareit.exception.users.UserInvalidDataException;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.ConflictException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
@@ -31,7 +32,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User update(User user, Long userId) {
+    public User update(User user, Long userId) throws BadRequestException {
         validateUserExists(userId);
         validateUserEmail(user.getEmail(), userId);
         User userUpdate = usersMap.get(userId);
@@ -47,19 +48,23 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public Collection<User> getAll() {
-        return usersMap.values();
+        return new ArrayList<>(usersMap.values());
     }
 
     @Override
-    public void deleteById(Long userId) {
+    public void deleteById(Long userId) throws BadRequestException {
         validateUserExists(userId);
         usersMap.remove(userId);
         log.info("user id = {} удалён", userId);
     }
 
     @Override
-    public Optional<User> getById(Long id) {
-        return Optional.ofNullable(usersMap.get(id));
+    public User getById(long id) throws NotFoundException {
+        User user = usersMap.get(id);
+        if(user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return user;
     }
 
     private void validateUserEmail(String email, Long id) {
@@ -68,13 +73,13 @@ public class InMemoryUserStorage implements UserStorage {
                 .anyMatch(u -> Objects.equals(email, u.getEmail()));
 
         if (emailExists) {
-            throw new UserInvalidDataException("Ошибка обновления. Такая почта уже существует");
+            throw new ConflictException("Ошибка обновления. Такая почта уже существует");
         }
     }
 
-    private void validateUserExists(Long id) {
+    private void validateUserExists(long id) throws BadRequestException {
         if (!usersMap.containsKey(id)) {
-            throw new UserBadRequestException("Ошибка обновления пользователя. Id пользователя не найден");
+            throw new BadRequestException("Ошибка обновления пользователя. Id пользователя не найден");
         }
     }
 }

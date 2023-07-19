@@ -1,42 +1,41 @@
-package ru.practicum.shareit.user.model;
+package ru.practicum.shareit.item.model;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@ToString
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@AllArgsConstructor
-@NoArgsConstructor
-@Table(name = "users")
-public class User {
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
 
+    @NotBlank
     @NotNull
-    @Column(name = "name", nullable = false)
-    String name;
+    String text;
 
-    @Email
-    @NotNull
-    @Column(name = "email", unique = true, nullable = false)
-    String email;
+    @CreatedDate
+    LocalDateTime created;
+
+    @Column(name = "item_id")
+    long itemId;
+
+    @Column(name = "author_id")
+    long authorId;
+    String authorName;
 }
