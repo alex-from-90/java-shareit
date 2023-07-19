@@ -16,5 +16,4 @@ public class BookingDto {
     private LocalDateTime start;
     @Future
     private LocalDateTime end;
-
 }

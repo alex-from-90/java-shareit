@@ -140,6 +140,7 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
+    @Transactional
     @Override
     public Comment addComment(Comment dto, long itemId, long authorId) throws BadRequestException {
         LocalDateTime now = LocalDateTime.now();

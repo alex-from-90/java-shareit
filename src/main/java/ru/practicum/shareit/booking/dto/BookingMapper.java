@@ -22,7 +22,7 @@ public class BookingMapper {
                                                           ItemRepository itemRepository,
                                                           UserRepository userRepository) throws NotFoundException {
         User booker = userRepository.findById(booking.getBookerId())
-                .orElseThrow(() -> new NotFoundException("Не найден User с id " + booking.getBookerId()));
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + booking.getBookerId()));
 
         Item item = itemRepository.findById(booking.getItemId())
                 .orElseThrow(() -> new NotFoundException("Не найден предмет с id " + booking.getItemId()));

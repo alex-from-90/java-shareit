@@ -42,24 +42,19 @@ public class UserService {
     }
 
     public User update(User user, long id) throws NotFoundException {
-        user.setId(id);
-        Optional<User> userIdDatabase = userRepository.findById(id);
-        if (user.getName() == null) {
-            if (userIdDatabase.isPresent()) {
-                user.setName(userIdDatabase.get().getName());
-            } else {
-                throw new NotFoundException("User не найде");
-            }
+        User userToUpdate = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User не найден"));
+
+        if (user.getName() != null) {
+            userToUpdate.setName(user.getName());
         }
-        if (user.getEmail() == null) {
-            if (userIdDatabase.isPresent()) {
-                user.setEmail(userIdDatabase.get().getEmail());
-            } else {
-                throw new NotFoundException("User не найден");
-            }
+
+        if (user.getEmail() != null) {
+            userToUpdate.setEmail(user.getEmail());
         }
+
         log.info("Обновлен пользователь с id " + id);
-        return userRepository.save(user);
+        return userRepository.save(userToUpdate);
     }
 
     public void delete(long id) {
