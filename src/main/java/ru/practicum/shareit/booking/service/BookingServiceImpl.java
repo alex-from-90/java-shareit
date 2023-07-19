@@ -34,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+
     @Transactional
     @Override
     public FullBookingDto addBooking(BookingDto dto, long bookerId) throws BadRequestException, NotFoundException {
@@ -59,6 +60,7 @@ public class BookingServiceImpl implements BookingService {
             throw new BadRequestException("Ошибка");
         }
     }
+
     @Transactional
     @Override
     public FullBookingDto approveBooking(long bookingId, boolean approved, long itemOwnerId)
