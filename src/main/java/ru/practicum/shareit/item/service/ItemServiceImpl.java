@@ -88,7 +88,7 @@ public class ItemServiceImpl implements ItemService {
                             ? Collections.unmodifiableList(bookingRepository.allBookingsForItem(itemId))
                             : Collections.emptyList();
 
-                    return bookings.isEmpty() && item.getUser().getId()== ownerId
+                    return bookings.isEmpty() && item.getUser().getId() == ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
                 })

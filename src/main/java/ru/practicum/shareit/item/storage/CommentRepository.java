@@ -16,6 +16,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "join User u on i.user.id = u.id " +
             "where i.user.id = ?1"
     )
-
     List<Comment> findAllByItemsOwnerId(Long ownerId);
 }

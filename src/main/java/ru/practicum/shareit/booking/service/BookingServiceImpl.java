@@ -117,7 +117,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (booking.getBookerId() != bookerId &&
                 itemRepository.findById(booking.getItemId())
-                        .map(i->i.getUser().getId())
+                        .map(i -> i.getUser().getId())
                         .orElse(-1L) != bookerId) {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }
