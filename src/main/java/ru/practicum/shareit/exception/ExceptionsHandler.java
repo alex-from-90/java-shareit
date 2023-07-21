@@ -1,6 +1,7 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,35 +13,36 @@ public class ExceptionsHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> constraintException(final MethodArgumentTypeMismatchException e) {
-        log.error("MethodArgumentTypeMismatchException ");
+        log.error("MethodArgumentTypeMismatchException ", e);
         String error = "Unknown " + e.getName() + ": " + e.getValue();
-        return ResponseEntity.status(400).body(new ErrorResponse(error));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(error));
     }
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> notFoundException(final NotFoundException e) {
-        log.error("NotFoundException ");
-
-        return ResponseEntity.status(404).body(new ErrorResponse(e.getMessage()));
+        log.error("NotFoundException ", e);
+        String error = e.getMessage();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(error));
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ErrorResponse> badRequestException(final NullPointerException e) {
-        log.error("badRequestException ");
+        log.error("badRequestException ", e);
         String error = "Bad request";
-        return ResponseEntity.status(400).body(new ErrorResponse(error));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(error));
     }
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> conflictException(final ConflictException e) {
-        log.error("conflictException ");
-        return ResponseEntity.status(409).body(new ErrorResponse(e.getMessage()));
+        log.error("conflictException ", e);
+        String error = e.getMessage();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(error));
     }
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> badRequestException(final BadRequestException e) {
-        log.error("badRequestException ");
-        String error = "Bad request";
-        return ResponseEntity.status(400).body(new ErrorResponse(error));
+        log.error("badRequestException ", e);
+        String error = e.getMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(error));
     }
 }

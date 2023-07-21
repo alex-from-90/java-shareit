@@ -11,8 +11,8 @@ import java.util.List;
 
 public class ItemMapper {
 
-    public static GetItemDto toGetItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
-        GetItemDto getItemDto = new GetItemDto();
+    public static ItemDto toGetItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
+        ItemDto getItemDto = new ItemDto();
         getItemDto.setId(item.getId());
         getItemDto.setName(item.getName());
         getItemDto.setDescription(item.getDescription());

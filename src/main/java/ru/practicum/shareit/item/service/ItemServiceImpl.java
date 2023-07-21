@@ -8,7 +8,6 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.GetItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
@@ -78,7 +77,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public GetItemDto getItem(long itemId, long ownerId) throws NotFoundException {
+    public ItemDto getItem(long itemId, long ownerId) throws NotFoundException {
         return itemRepository.findById(itemId)
                 .map(item -> {
                     List<Comment> comments = commentRepository.findAllByItemId(itemId);
@@ -96,18 +95,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<GetItemDto> getAllItemsByOwner(long ownerId) {
-        List<GetItemDto> allItems =
-                itemRepository.findAll().stream()
-                        .filter(l -> l.getOwnerId() == ownerId)
+    public List<ItemDto> getAllItemsByOwner(long ownerId) {
+        List<ItemDto> allItems =
+                itemRepository.findAllByOwnerId(ownerId).stream()
                         .map(l -> ItemMapper.toGetItemDto(l, null, null))
-                        .sorted(Comparator.comparing(GetItemDto::getId))
+                        .sorted(Comparator.comparing(ItemDto::getId))
                         .collect(Collectors.toList());
 
         List<Comment> allCommentsByItemsOwner = commentRepository.findAllByItemsOwnerId(ownerId);
         List<Booking> allBookingsByItemsOwner = bookingRepository.findAllByItemsOwnerId(ownerId);
 
-        for (GetItemDto item : allItems) {
+        for (ItemDto item : allItems) {
 
             List<Comment> comments = allCommentsByItemsOwner
                     .stream()
@@ -127,6 +125,7 @@ public class ItemServiceImpl implements ItemService {
         }
         return allItems;
     }
+
 
     @Override
     public List<ItemDto> searchItem(String text, long ownerId) {

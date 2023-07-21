@@ -84,4 +84,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "join User u on u.id = i.ownerId " +
             "where i.ownerId = ?1")
     List<Booking> findAllByItemsOwnerId(Long ownerId);
+
+    @Query(" select b" +
+            " from Booking b " +
+            " join Item i on (i.id = b.itemId) " +
+            " join User u on (u.id = i.ownerId)" +
+            " where i.ownerId = ?1 and b.status = 'WAITING'"
+    )
+    List<Booking> bookingsForItemWaiting(Long ownerId, Sort sort);
+
+    @Query(" select b" +
+            " from Booking b " +
+            " join Item i on (i.id = b.itemId) " +
+            " join User u on (u.id = i.ownerId)" +
+            " where i.ownerId = ?1 and b.status = 'REJECTED'"
+    )
+    List<Booking> bookingsForItemRejected(Long ownerId, Sort sort);
+
+
 }

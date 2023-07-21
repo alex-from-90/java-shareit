@@ -28,7 +28,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 
-
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

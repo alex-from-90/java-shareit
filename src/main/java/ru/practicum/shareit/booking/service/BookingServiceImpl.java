@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
-import ru.practicum.shareit.booking.dto.FullBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.enums.BookingState;
 import ru.practicum.shareit.booking.model.enums.Status;
@@ -34,10 +33,11 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final BookingMapper bookingMapper;
 
     @Transactional
     @Override
-    public FullBookingDto addBooking(BookingDto dto, long bookerId) throws BadRequestException, NotFoundException {
+    public BookingDto addBooking(BookingDto dto, long bookerId) throws BadRequestException, NotFoundException {
         Optional<Item> itemIdDatabase = itemRepository.findById(dto.getItemId());
         Optional<User> booker = userRepository.findById(bookerId);
 
@@ -55,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
             booking.setStatus(Status.WAITING);
 
             Booking savedBooking = bookingRepository.save(booking);
-            return BookingMapper.toFullBookingFromBooking(savedBooking, Status.WAITING, itemRepository, userRepository);
+            return bookingMapper.toFullBookingFromBooking(savedBooking, Status.WAITING);
         } else {
             throw new BadRequestException("Ошибка");
         }
@@ -63,7 +63,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     @Override
-    public FullBookingDto approveBooking(long bookingId, boolean approved, long itemOwnerId)
+    public BookingDto approveBooking(long bookingId, boolean approved, long itemOwnerId)
             throws BadRequestException, NotFoundException {
         Optional<Booking> bookingIdDatabase = bookingRepository.findById(bookingId);
 
@@ -84,7 +84,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         long bookerId = booking.getBookerId();
-        BookingDto dto = BookingMapper.toBookingDto(booking);
+        BookingDto dto = bookingMapper.toBookingDto(booking);
         dto.setId(bookingId);
         Booking updatedBooking;
         Status status;
@@ -99,14 +99,14 @@ public class BookingServiceImpl implements BookingService {
             status = Status.REJECTED;
         }
 
-        updatedBooking = BookingMapper.toBooking(dto, bookerId, status);
+        updatedBooking = bookingMapper.toBooking(dto, bookerId, status);
 
-        return BookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status,
-                itemRepository, userRepository);
+        return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public FullBookingDto getBooking(long bookingId, long bookerId) throws NotFoundException {
+    public BookingDto getBooking(long bookingId, long bookerId) throws NotFoundException {
         Optional<Booking> bookingIdDatabase = bookingRepository.findById(bookingId);
 
         if (bookingIdDatabase.isEmpty()) {
@@ -123,11 +123,12 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Status status = booking.getStatus();
-        return BookingMapper.toFullBookingFromBooking(booking, status, itemRepository, userRepository);
+        return bookingMapper.toFullBookingFromBooking(booking, status);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<FullBookingDto> getAllBookingsByBookerId(long bookerId, BookingState state) throws NotFoundException {
+    public List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state) throws NotFoundException {
         if (userRepository.existsById(bookerId)) {
             List<Booking> bookings;
             switch (state) {
@@ -161,10 +162,8 @@ public class BookingServiceImpl implements BookingService {
             return bookings.stream()
                     .map(booking -> {
                         try {
-                            return BookingMapper.toFullBookingFromBooking(booking, booking.getStatus(),
-                                    itemRepository, userRepository);
+                            return bookingMapper.toFullBookingFromBooking(booking, booking.getStatus());
                         } catch (NotFoundException e) {
-
                             return null;
                         }
                     })
@@ -175,8 +174,9 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<FullBookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state) throws NotFoundException {
+    public List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state) throws NotFoundException {
         if (userRepository.existsById(ownerId)) {
             List<Booking> bookings;
             switch (state) {
@@ -196,16 +196,10 @@ public class BookingServiceImpl implements BookingService {
                             Sort.by(Sort.Direction.DESC, "start"));
                     break;
                 case WAITING:
-                    bookings = bookingRepository.bookingsForItem(ownerId, Sort.by(Sort.Direction.DESC, "start"))
-                            .stream()
-                            .filter(booking -> booking.getStatus() == Status.WAITING)
-                            .collect(Collectors.toList());
+                    bookings = bookingRepository.bookingsForItemWaiting(ownerId, Sort.by(Sort.Direction.DESC, "start"));
                     break;
                 case REJECTED:
-                    bookings = bookingRepository.bookingsForItem(ownerId, Sort.by(Sort.Direction.DESC, "start"))
-                            .stream()
-                            .filter(booking -> booking.getStatus() == Status.REJECTED)
-                            .collect(Collectors.toList());
+                    bookings = bookingRepository.bookingsForItemRejected(ownerId, Sort.by(Sort.Direction.DESC, "start"));
                     break;
                 default:
                     return Collections.emptyList();
@@ -214,10 +208,8 @@ public class BookingServiceImpl implements BookingService {
             return bookings.stream()
                     .map(booking -> {
                         try {
-                            return BookingMapper.toFullBookingFromBooking(booking, booking.getStatus(),
-                                    itemRepository, userRepository);
+                            return bookingMapper.toFullBookingFromBooking(booking, booking.getStatus());
                         } catch (NotFoundException e) {
-
                             return null;
                         }
                     })
