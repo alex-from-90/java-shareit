@@ -46,13 +46,15 @@ public class ItemMapper {
         return dto;
     }
 
-    public static Item toItem(ItemDto dto, long owner) {
+    public static Item toItem(ItemDto dto) {
         Item item = new Item();
         item.setId(dto.getId());
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setAvailable(dto.getAvailable());
-        item.setOwnerId(owner);
+        //TODO
+
+        item.setUser(null);
         return item;
     }
 }

@@ -41,7 +41,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Добавлен предмет");
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        Item item = toItem(dto, ownerId);
+        Item item = toItem(dto);
         itemRepository.save(item);
         return toItemDto(item);
     }
@@ -71,9 +71,9 @@ public class ItemServiceImpl implements ItemService {
             throw new NotFoundException("Обновление невозможно");
         }
     }
-
+    //Владелец не напрямую, а через user id
     public long getItemOwnerId(long itemId) {
-        return itemRepository.getReferenceById(itemId).getOwnerId();
+        return itemRepository.getReferenceById(itemId).getUser().getId();
     }
 
     @Override
@@ -83,11 +83,12 @@ public class ItemServiceImpl implements ItemService {
                     List<Comment> comments = commentRepository.findAllByItemId(itemId);
                     log.info("Получен предмет с id " + itemId);
 
-                    List<Booking> bookings = item.getOwnerId() == ownerId
+                    //Владелец не напрямую, а через user id
+                    List<Booking> bookings = item.getUser().getId() == ownerId
                             ? Collections.unmodifiableList(bookingRepository.allBookingsForItem(itemId))
                             : Collections.emptyList();
-
-                    return bookings.isEmpty() && item.getOwnerId() == ownerId
+                    //Владелец не напрямую, а через user id
+                    return bookings.isEmpty() && item.getUser().getId()== ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
                 })
@@ -109,13 +110,13 @@ public class ItemServiceImpl implements ItemService {
 
             List<Comment> comments = allCommentsByItemsOwner
                     .stream()
-                    .filter(l -> l.getItemId() == item.getId())
+                    .filter(l -> l.getItem().getId() == item.getId())
                     .collect(Collectors.toList());
             item.setComments(comments);
 
             List<Booking> bookings = allBookingsByItemsOwner
                     .stream()
-                    .filter(l -> l.getItemId() == item.getId())
+                    .filter(l -> l.getItem().getId() == item.getId())
                     .collect(Collectors.toList());
 
             if (bookings.size() != 0) {
@@ -147,9 +148,15 @@ public class ItemServiceImpl implements ItemService {
         if (!bookingRepository.bookingsForItemAndBookerPast(authorId, itemId, now).isEmpty()) {
             User author = userRepository.findById(authorId).orElseThrow(() -> new BadRequestException("Пользователь не найден"));
 
+            // Получаем соответствующий элемент (Item) из базы данных по его идентификатору
+            Item item = itemRepository.findById(itemId).orElseThrow(() -> new BadRequestException("Элемент не найден"));
+
             Comment comment = new Comment();
             comment.setAuthorId(authorId);
-            comment.setItemId(itemId);
+
+            // Устанавливаем связанный элемент (Item) через поле item
+            comment.setItem(item);
+
             comment.setText(dto.getText());
             comment.setCreated(now);
             comment.setAuthorName(author.getName());

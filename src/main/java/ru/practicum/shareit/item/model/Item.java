@@ -5,20 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-@Data
+import javax.persistence.*;
+//Более наглядный порядок аннотаций
 @Entity
+@Table(name = "items")
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "items")
 public class Item {
 
     @Id
@@ -30,9 +26,10 @@ public class Item {
     String description;
 
     boolean available;
-
-    @Column(name = "owner_id")
-    long ownerId;
+    //Установили взаимосвязь
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    User user;
 
     @Column(name = "request_id")
     long requestId;

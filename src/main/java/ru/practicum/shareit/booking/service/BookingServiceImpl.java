@@ -41,15 +41,17 @@ public class BookingServiceImpl implements BookingService {
         Optional<Item> itemIdDatabase = itemRepository.findById(dto.getItemId());
         Optional<User> booker = userRepository.findById(bookerId);
 
-        if (itemIdDatabase.isEmpty() || booker.isEmpty() || itemIdDatabase.get().getOwnerId() == bookerId) {
+        if (itemIdDatabase.isEmpty() || booker.isEmpty() || itemIdDatabase.get().getUser().getId() == bookerId) {
             throw new NotFoundException("Пустые параметры бронирования");
         }
 
         Item item = itemIdDatabase.get();
         if (item.isAvailable() && dto.getEnd().isAfter(dto.getStart())) {
             Booking booking = new Booking();
-            booking.setBookerId(bookerId);
-            booking.setItemId(dto.getItemId());
+
+            booking.setBooker(booker.get());
+
+            booking.setItem(dto.getItem());
             booking.setStart(dto.getStart());
             booking.setEnd(dto.getEnd());
             booking.setStatus(Status.WAITING);
@@ -74,16 +76,16 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingIdDatabase.get();
 
         try {
-            Item item = itemRepository.findById(booking.getItemId())
+            Item item = itemRepository.findById(booking.getItem().getId())
                     .orElseThrow(() -> new NotFoundException("Не найден владелец вещи"));
-            if (item.getOwnerId() != itemOwnerId) {
+            //Сравниваем id юзера и id владельца
+            if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
             }
         } catch (Exception e) {
             throw new NotFoundException("Не найден владелец вещи");
         }
 
-        long bookerId = booking.getBookerId();
         BookingDto dto = bookingMapper.toBookingDto(booking);
         dto.setId(bookingId);
         Booking updatedBooking;
@@ -99,7 +101,7 @@ public class BookingServiceImpl implements BookingService {
             status = Status.REJECTED;
         }
 
-        updatedBooking = bookingMapper.toBooking(dto, bookerId, status);
+        updatedBooking = bookingMapper.toBooking(dto, booking.getItem(), booking.getBooker(), status);
 
         return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status);
     }
@@ -115,9 +117,10 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingIdDatabase.get();
 
-        if (booking.getBookerId() != bookerId &&
-                itemRepository.findById(booking.getItemId())
-                        .map(Item::getOwnerId)
+        if (booking.getBooker().getId() != bookerId &&
+                itemRepository.findById(booking.getItem().getId())
+                        //лямбда для доступа к User объекту из , Itemа и извлечения его id.
+                        .map(i->i.getUser().getId())
                         .orElse(-1L) != bookerId) {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }

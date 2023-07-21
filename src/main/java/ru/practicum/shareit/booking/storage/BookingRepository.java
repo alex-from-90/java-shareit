@@ -9,12 +9,13 @@ import ru.practicum.shareit.booking.model.enums.Status;
 import java.time.LocalDateTime;
 import java.util.List;
 
+//Берём владельца не по owner а по user id
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join User u on (u.id = b.bookerId)" +
-            " where b.bookerId = ?1 and b.end > ?2 and b.start < ?2"
+            " join User u on (u.id = b.booker.id)" +
+            " where b.booker.id = ?1 and b.end > ?2 and b.start < ?2"
     )
     List<Booking> findByBookerIdAndEndIsBeforeAndStartIsAfter(Long bookerId, LocalDateTime end,
                                                               LocalDateTime start, Sort sort);
@@ -23,7 +24,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join User u on (u.id = b.bookerId)" +
+            " join User u on (u.id = b.booker.id)" +
             " where u.id = ?1 and b.end < ?2"
     )
     List<Booking> findByBookerIdAndEndAfter(Long bookerId, LocalDateTime end, Sort sort);
@@ -34,72 +35,69 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1"
     )
     List<Booking> bookingsForItem(Long ownerId, Sort sort);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " where i.id = ?1"
     )
     List<Booking> allBookingsForItem(Long itemId);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1 and b.end < ?2"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1 and b.end < ?2"
     )
     List<Booking> bookingsForItemPast(Long ownerId, LocalDateTime now, Sort sort);
 
-    @Query(" select b" +
-            " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where b.bookerId = ?1 and i.id = ?2 and b.end < ?3"
-    )
+    @Query("SELECT b " +
+            "FROM Booking b " +
+            "JOIN b.item i " +
+            "JOIN i.user u " +
+            "WHERE b.booker.id = ?1 AND b.item.id = ?2 AND b.end < ?3")
     List<Booking> bookingsForItemAndBookerPast(Long bookerId, Long itemId, LocalDateTime now);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1 and b.start > ?2"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1 and b.start > ?2"
     )
     List<Booking> bookingsForItemFuture(Long ownerId, LocalDateTime now, Sort sort);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1 and b.end >= ?2 and b.start < ?2"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1 and b.end >= ?2 and b.start < ?2"
     )
     List<Booking> bookingsForItemCurrent(Long ownerId, LocalDateTime now, Sort sort);
 
     @Query("select b from Booking b " +
-            "join Item i on i.id = b.itemId " +
-            "join User u on u.id = i.ownerId " +
-            "where i.ownerId = ?1")
+            "join Item i on i.id = b.item.id " +
+            "join User u on u.id = i.user.id " +
+            "where i.user.id = ?1")
     List<Booking> findAllByItemsOwnerId(Long ownerId);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1 and b.status = 'WAITING'"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1 and b.status = 'WAITING'"
     )
     List<Booking> bookingsForItemWaiting(Long ownerId, Sort sort);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
-            " join User u on (u.id = i.ownerId)" +
-            " where i.ownerId = ?1 and b.status = 'REJECTED'"
+            " join Item i on (i.id = b.item.id) " +
+            " join User u on (u.id = i.user.id)" +
+            " where i.user.id = ?1 and b.status = 'REJECTED'"
     )
     List<Booking> bookingsForItemRejected(Long ownerId, Sort sort);
-
-
 }

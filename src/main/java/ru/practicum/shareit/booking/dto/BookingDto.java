@@ -21,8 +21,7 @@ public class BookingDto {
     private LocalDateTime start;
     @Future
     private LocalDateTime end;
-    private Item item;
-    private User booker;
+    private Item item;        // Represents the associated Item entity
+    private User booker;      // Represents the associated User entity
     private Status status;
-
 }

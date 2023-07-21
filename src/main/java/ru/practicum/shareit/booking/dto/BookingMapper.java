@@ -23,26 +23,26 @@ public class BookingMapper {
     public BookingDto toBookingDto(Booking booking) {
         return BookingDto.builder()
                 .id(booking.getId())
-                .itemId(booking.getItemId())
+                .itemId(booking.getItem().getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
                 .build();
     }
 
-    public Booking toBooking(BookingDto dto, long bookerId, Status status) {
-        return new Booking(dto.getId(), dto.getStart(), dto.getEnd(), dto.getItemId(), bookerId, status);
+    public Booking toBooking(BookingDto dto, Item item, User booker, Status status) {
+        return new Booking(dto.getId(), dto.getStart(), dto.getEnd(), item, booker, status);
     }
 
     public BookingDto toFullBookingFromBooking(Booking booking, Status status) throws NotFoundException {
-        User booker = userRepository.findById(booking.getBookerId())
-                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + booking.getBookerId()));
+        User booker = userRepository.findById(booking.getBooker().getId())
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + booking.getBooker().getId()));
 
-        Item item = itemRepository.findById(booking.getItemId())
-                .orElseThrow(() -> new NotFoundException("Не найден предмет с id " + booking.getItemId()));
+        Item item = itemRepository.findById(booking.getItem().getId())
+                .orElseThrow(() -> new NotFoundException("Не найден предмет с id " + booking.getItem().getId()));
 
         return BookingDto.builder()
                 .id(booking.getId())
-                .itemId(booking.getItemId())
+                .itemId(booking.getItem().getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
                 .item(item)
