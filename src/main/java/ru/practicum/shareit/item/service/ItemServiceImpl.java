@@ -39,9 +39,10 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public ItemDto addItem(ItemDto dto, long ownerId) throws NotFoundException {
         log.info("Добавлен предмет");
-        userRepository.findById(ownerId)
+        User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        Item item = toItem(dto);
+        Item item = toItem(dto, owner);
+        item.setUser(owner); // Установка владельца для item
         itemRepository.save(item);
         return toItemDto(item);
     }
