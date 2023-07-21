@@ -41,7 +41,7 @@ public class BookingServiceImpl implements BookingService {
         Optional<Item> itemIdDatabase = itemRepository.findById(dto.getItemId());
         Optional<User> booker = userRepository.findById(bookerId);
 
-        if (itemIdDatabase.isEmpty() || booker.isEmpty() || itemIdDatabase.get().getOwnerId() == bookerId) {
+        if (itemIdDatabase.isEmpty() || booker.isEmpty() || itemIdDatabase.get().getUser().getId() == bookerId) {
             throw new NotFoundException("Пустые параметры бронирования");
         }
 
@@ -76,7 +76,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             Item item = itemRepository.findById(booking.getItemId())
                     .orElseThrow(() -> new NotFoundException("Не найден владелец вещи"));
-            if (item.getOwnerId() != itemOwnerId) {
+            if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
             }
         } catch (Exception e) {
@@ -117,7 +117,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (booking.getBookerId() != bookerId &&
                 itemRepository.findById(booking.getItemId())
-                        .map(Item::getOwnerId)
+                        .map(i->i.getUser().getId())
                         .orElse(-1L) != bookerId) {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }

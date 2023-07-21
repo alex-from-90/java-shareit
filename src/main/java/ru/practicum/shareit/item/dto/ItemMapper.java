@@ -4,6 +4,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.enums.Status;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -46,13 +47,13 @@ public class ItemMapper {
         return dto;
     }
 
-    public static Item toItem(ItemDto dto, long owner) {
+    public static Item toItem(ItemDto dto, User user) {
         Item item = new Item();
         item.setId(dto.getId());
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setAvailable(dto.getAvailable());
-        item.setOwnerId(owner);
+        item.setUser(user);//Вещь юзера
         return item;
     }
 }
