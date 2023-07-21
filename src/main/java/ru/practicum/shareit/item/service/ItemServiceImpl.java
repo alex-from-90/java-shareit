@@ -73,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     public long getItemOwnerId(long itemId) {
-        return itemRepository.getReferenceById(itemId).getOwnerId();
+        return itemRepository.getReferenceById(itemId).getUser().getId();
     }
 
     @Override
@@ -83,11 +83,11 @@ public class ItemServiceImpl implements ItemService {
                     List<Comment> comments = commentRepository.findAllByItemId(itemId);
                     log.info("Получен предмет с id " + itemId);
 
-                    List<Booking> bookings = item.getOwnerId() == ownerId
+                    List<Booking> bookings = item.getUser().getId() == ownerId
                             ? Collections.unmodifiableList(bookingRepository.allBookingsForItem(itemId))
                             : Collections.emptyList();
 
-                    return bookings.isEmpty() && item.getOwnerId() == ownerId
+                    return bookings.isEmpty() && item.getUser().getId()== ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
                 })

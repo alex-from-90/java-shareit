@@ -5,13 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Data
 @Entity
@@ -31,8 +27,9 @@ public class Item {
 
     boolean available;
 
-    @Column(name = "owner_id")
-    long ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    User user;
 
     @Column(name = "request_id")
     long requestId;

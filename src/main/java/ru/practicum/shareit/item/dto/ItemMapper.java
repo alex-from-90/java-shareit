@@ -52,7 +52,8 @@ public class ItemMapper {
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setAvailable(dto.getAvailable());
-        item.setOwnerId(owner);
+        //TODO
+        item.setUser(null);
         return item;
     }
 }

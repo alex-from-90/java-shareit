@@ -13,8 +13,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("select c from Comment c" +
             " join Item i on c.itemId = i.id " +
             "join Booking b on b.itemId = i.id " +
-            "join User u on i.ownerId = u.id " +
-            "where i.ownerId = ?1"
+            "join User u on i.user.id = u.id " +
+            "where i.user.id = ?1"
     )
 
     List<Comment> findAllByItemsOwnerId(Long ownerId);
