@@ -22,24 +22,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-
     @Column(name = "start_date")
     LocalDateTime start;
-
     @Column(name = "end_date")
     LocalDateTime end;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "item_id")
     Item item;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "booker_id")
     User booker;
+
 
     @Enumerated(EnumType.STRING)
     Status status;

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.List;
-//выборка не по owner, а по user id (связь)
+
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query(" select i from Item i " +

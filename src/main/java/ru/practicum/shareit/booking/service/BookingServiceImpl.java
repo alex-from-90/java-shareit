@@ -48,10 +48,8 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemIdDatabase.get();
         if (item.isAvailable() && dto.getEnd().isAfter(dto.getStart())) {
             Booking booking = new Booking();
-
             booking.setBooker(booker.get());
-
-            booking.setItem(dto.getItem());
+            booking.setItem(item);
             booking.setStart(dto.getStart());
             booking.setEnd(dto.getEnd());
             booking.setStatus(Status.WAITING);
@@ -70,7 +68,7 @@ public class BookingServiceImpl implements BookingService {
         Optional<Booking> bookingIdDatabase = bookingRepository.findById(bookingId);
 
         if (bookingIdDatabase.isEmpty()) {
-            throw new NotFoundException("Бронироввание не найдено");
+            throw new NotFoundException("Бронирование не найдено");
         }
 
         Booking booking = bookingIdDatabase.get();
@@ -78,7 +76,6 @@ public class BookingServiceImpl implements BookingService {
         try {
             Item item = itemRepository.findById(booking.getItem().getId())
                     .orElseThrow(() -> new NotFoundException("Не найден владелец вещи"));
-            //Сравниваем id юзера и id владельца
             if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
             }
@@ -86,26 +83,17 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Не найден владелец вещи");
         }
 
-        BookingDto dto = bookingMapper.toBookingDto(booking);
-        dto.setId(bookingId);
-        Booking updatedBooking;
-        Status status;
-
         if (booking.getStatus() == Status.APPROVED && approved) {
-            throw new BadRequestException("Ошибка");
+            throw new BadRequestException("Бронирование уже было подтверждено");
         }
 
-        if (approved) {
-            status = Status.APPROVED;
-        } else {
-            status = Status.REJECTED;
-        }
+        Status status = approved ? Status.APPROVED : Status.REJECTED;
+        booking.setStatus(status);
 
-        updatedBooking = bookingMapper.toBooking(dto, booking.getItem(), booking.getBooker(), status);
+        Booking updatedBooking = bookingRepository.save(booking);
 
-        return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status);
+        return bookingMapper.toFullBookingFromBooking(updatedBooking, status);
     }
-
     @Transactional(readOnly = true)
     @Override
     public BookingDto getBooking(long bookingId, long bookerId) throws NotFoundException {
@@ -118,10 +106,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingIdDatabase.get();
 
         if (booking.getBooker().getId() != bookerId &&
-                itemRepository.findById(booking.getItem().getId())
-                        //лямбда для доступа к User объекту из , Itemа и извлечения его id.
-                        .map(i->i.getUser().getId())
-                        .orElse(-1L) != bookerId) {
+                booking.getItem().getUser().getId() != bookerId) {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }
 
