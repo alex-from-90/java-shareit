@@ -72,7 +72,7 @@ public class ItemServiceImpl implements ItemService {
             throw new NotFoundException("Обновление невозможно");
         }
     }
-    //Владелец не напрямую, а через user id
+
     public long getItemOwnerId(long itemId) {
         return itemRepository.getReferenceById(itemId).getUser().getId();
     }
@@ -84,11 +84,10 @@ public class ItemServiceImpl implements ItemService {
                     List<Comment> comments = commentRepository.findAllByItemId(itemId);
                     log.info("Получен предмет с id " + itemId);
 
-                    //Владелец не напрямую, а через user id
                     List<Booking> bookings = item.getUser().getId() == ownerId
                             ? Collections.unmodifiableList(bookingRepository.allBookingsForItem(itemId))
                             : Collections.emptyList();
-                    //Владелец не напрямую, а через user id
+
                     return bookings.isEmpty() && item.getUser().getId()== ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
@@ -111,7 +110,7 @@ public class ItemServiceImpl implements ItemService {
 
             List<Comment> comments = allCommentsByItemsOwner
                     .stream()
-                    .filter(l -> l.getItem().getId() == item.getId())
+                    .filter(l -> l.getItemId() == item.getId())
                     .collect(Collectors.toList());
             item.setComments(comments);
 
@@ -149,15 +148,9 @@ public class ItemServiceImpl implements ItemService {
         if (!bookingRepository.bookingsForItemAndBookerPast(authorId, itemId, now).isEmpty()) {
             User author = userRepository.findById(authorId).orElseThrow(() -> new BadRequestException("Пользователь не найден"));
 
-            // Получаем соответствующий элемент (Item) из базы данных по его идентификатору
-            Item item = itemRepository.findById(itemId).orElseThrow(() -> new BadRequestException("Элемент не найден"));
-
             Comment comment = new Comment();
             comment.setAuthorId(authorId);
-
-            // Устанавливаем связанный элемент (Item) через поле item
-            comment.setItem(item);
-
+            comment.setItemId(itemId);
             comment.setText(dto.getText());
             comment.setCreated(now);
             comment.setAuthorName(author.getName());
