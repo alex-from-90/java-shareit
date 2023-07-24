@@ -22,7 +22,9 @@ public class BookingDto {
     @Future
     private LocalDateTime end;
     private Item item;
+    //TODO Need to delete
     private User booker;
+    private long bookerId;
     private Status status;
 
 }

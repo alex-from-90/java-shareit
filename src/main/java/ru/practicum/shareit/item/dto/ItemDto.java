@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Comment;
 
@@ -29,7 +30,7 @@ public class ItemDto {
     @NotNull
     Boolean available;
 
-    Booking lastBooking;
-    Booking nextBooking;
+    BookingDto lastBooking;
+    BookingDto nextBooking;
     List<Comment> comments;
 }

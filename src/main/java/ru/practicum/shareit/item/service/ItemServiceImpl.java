@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
@@ -21,9 +22,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.practicum.shareit.item.dto.ItemMapper.toGetItemDto;
-import static ru.practicum.shareit.item.dto.ItemMapper.toItem;
-import static ru.practicum.shareit.item.dto.ItemMapper.toItemDto;
 
 @Slf4j
 @Service
@@ -34,6 +32,8 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemMapper itemMapper;
+    private final BookingMapper bookingMapper;
 
     @Override
     @Transactional
@@ -41,10 +41,10 @@ public class ItemServiceImpl implements ItemService {
         log.info("Добавлен предмет");
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        Item item = toItem(dto, owner);
+        Item item = itemMapper.toItem(dto, owner);
         item.setUser(owner); // Установка владельца для item
         itemRepository.save(item);
-        return toItemDto(item);
+        return itemMapper.toItemDto(item);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ItemServiceImpl implements ItemService {
                 item.setAvailable(dto.getAvailable());
             }
             log.info("Обновлен предмет с id " + itemId);
-            return toItemDto(itemRepository.save(item));
+            return itemMapper.toItemDto(itemRepository.save(item));
         } else {
             throw new NotFoundException("Обновление невозможно");
         }
@@ -89,8 +89,8 @@ public class ItemServiceImpl implements ItemService {
                             : Collections.emptyList();
 
                     return bookings.isEmpty() && item.getUser().getId()== ownerId
-                            ? toGetItemDto(item, null, comments)
-                            : toGetItemDto(item, bookings, comments);
+                            ? itemMapper.toGetItemDto(item, null, comments)
+                            : itemMapper.toGetItemDto(item, bookings, comments);
                 })
                 .orElseThrow(() -> new NotFoundException("Данный предмет не существует"));
     }
@@ -99,7 +99,7 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDto> getAllItemsByOwner(long ownerId) {
         List<ItemDto> allItems =
                 itemRepository.findAllByOwnerId(ownerId).stream()
-                        .map(l -> ItemMapper.toGetItemDto(l, null, null))
+                        .map(l -> itemMapper.toGetItemDto(l, null, null))
                         .sorted(Comparator.comparing(ItemDto::getId))
                         .collect(Collectors.toList());
 
@@ -120,8 +120,8 @@ public class ItemServiceImpl implements ItemService {
                     .collect(Collectors.toList());
 
             if (bookings.size() != 0) {
-                item.setLastBooking(bookings.get(0));
-                item.setNextBooking(bookings.get(bookings.size() - 1));
+                item.setLastBooking(bookingMapper.toFullBookingFromBooking(bookings.get(0),bookings.get(0).getStatus()));
+                item.setNextBooking(bookingMapper.toFullBookingFromBooking(bookings.get(bookings.size() - 1),bookings.get(bookings.size() - 1).getStatus()));
             }
         }
         return allItems;
@@ -135,7 +135,7 @@ public class ItemServiceImpl implements ItemService {
         } else {
             return itemRepository.search(text).stream()
                     .filter(Item::isAvailable)
-                    .map(ItemMapper::toItemDto)
+                    .map(itemMapper::toItemDto)
                     .collect(Collectors.toList());
         }
     }

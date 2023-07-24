@@ -17,8 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             " join User u on (u.id = b.booker.id)" +
             " where b.booker.id = ?1 and b.end > ?2 and b.start < ?2"
     )
-    List<Booking> findByBookerIdAndEndIsBeforeAndStartIsAfter(Long bookerId, LocalDateTime end,
-                                                              LocalDateTime start, Sort sort);
+    List<Booking> findByBookerIdAndEndIsBeforeAndStartIsAfter(Long bookerId, LocalDateTime end, LocalDateTime start);
 
     List<Booking> findByBookerIdAndStartAfter(Long bookerId, LocalDateTime start, Sort sort);
 

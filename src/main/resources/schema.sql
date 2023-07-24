@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS items (
                                      description VARCHAR(512) NOT NULL,
                                      available BOOLEAN NOT NULL,
                                      owner_id BIGINT NOT NULL REFERENCES users(id),
-                                     request_id BIGINT NOT NULL REFERENCES requests(id),
+                                     request_id BIGINT REFERENCES requests(id),
                                      CONSTRAINT pk_items PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS comments (
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS comments (
                                         text VARCHAR(512) NOT NULL,
                                         item_id BIGINT NOT NULL REFERENCES items(id),
                                         author_id BIGINT NOT NULL REFERENCES users(id),
+                                        author_name VARCHAR(200),
                                         created TIMESTAMP NOT NULL,
                                         CONSTRAINT pk_comments PRIMARY KEY (id)
 );

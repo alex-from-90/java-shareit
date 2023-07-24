@@ -1,5 +1,8 @@
 package ru.practicum.shareit.item.dto;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.enums.Status;
 import ru.practicum.shareit.item.model.Comment;
@@ -10,9 +13,13 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+@Component
+@RequiredArgsConstructor
 public class ItemMapper {
 
-    public static ItemDto toGetItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
+    private final BookingMapper bookingMapper;
+
+    public ItemDto toGetItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
         ItemDto getItemDto = new ItemDto();
         getItemDto.setId(item.getId());
         getItemDto.setName(item.getName());
@@ -23,14 +30,16 @@ public class ItemMapper {
             LocalDateTime now = LocalDateTime.now();
 
             getItemDto.setLastBooking(bookings.stream()
-                    .filter(booking -> booking.getStart().isBefore(now))
-                    .max(Comparator.comparing(Booking::getEnd))
+                    .filter(booking -> booking.getEnd().isBefore(now))
+                    .min(Comparator.comparing(Booking::getEnd))
+                .map(booking -> bookingMapper.toFullBookingFromBooking(booking,booking.getStatus()))
                     .orElse(null));
 
             getItemDto.setNextBooking(bookings.stream()
                     .filter(booking -> booking.getStart().isAfter(now))
                     .filter(booking -> !booking.getStatus().equals(Status.REJECTED))
                     .min(Comparator.comparing(Booking::getStart))
+                    .map(booking -> bookingMapper.toFullBookingFromBooking(booking,booking.getStatus()))
                     .orElse(null));
         }
 
@@ -38,7 +47,7 @@ public class ItemMapper {
         return getItemDto;
     }
 
-    public static ItemDto toItemDto(Item item) {
+    public ItemDto toItemDto(Item item) {
         ItemDto dto = new ItemDto();
         dto.setId(item.getId());
         dto.setName(item.getName());
@@ -47,7 +56,7 @@ public class ItemMapper {
         return dto;
     }
 
-    public static Item toItem(ItemDto dto, User user) {
+    public Item toItem(ItemDto dto, User user) {
         Item item = new Item();
         item.setId(dto.getId());
         item.setName(dto.getName());

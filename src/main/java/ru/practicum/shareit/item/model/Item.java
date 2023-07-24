@@ -31,6 +31,6 @@ public class Item {
     @JoinColumn(name = "owner_id")
     User user;
 
-    @Column(name = "request_id")
-    long requestId;
+    //@Column(name = "request_id")
+    //long requestId;
 }

@@ -133,7 +133,8 @@ public class BookingServiceImpl implements BookingService {
                     break;
                 case CURRENT:
                     bookings = bookingRepository.findByBookerIdAndEndIsBeforeAndStartIsAfter(bookerId,
-                            LocalDateTime.now(), LocalDateTime.now(), Sort.by(Sort.Direction.DESC, "start"));
+                                                                                             LocalDateTime.now(),
+                                                                                             LocalDateTime.now());
                     break;
                 case WAITING:
                     bookings = bookingRepository.findAllByBookerIdAndStatus(bookerId, Status.WAITING,
