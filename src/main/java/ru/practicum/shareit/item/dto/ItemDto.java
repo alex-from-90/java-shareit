@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
-import ru.practicum.shareit.item.model.Comment;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -31,5 +30,5 @@ public class ItemDto {
 
     BookingForItemDto lastBooking;
     BookingForItemDto nextBooking;
-    List<Comment> comments;
+    List<CommentDto> comments;
 }

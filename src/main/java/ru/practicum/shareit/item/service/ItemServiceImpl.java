@@ -10,6 +10,8 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
@@ -20,12 +22,13 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static ru.practicum.shareit.item.dto.ItemMapper.toGetItemDto;
-import static ru.practicum.shareit.item.dto.ItemMapper.toItem;
-import static ru.practicum.shareit.item.dto.ItemMapper.toItemDto;
+import static ru.practicum.shareit.item.dto.ItemMapper.*;
 
 @Slf4j
 @Service
@@ -84,7 +87,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItem(long itemId, long ownerId) throws NotFoundException {
         return itemRepository.findById(itemId)
                 .map(item -> {
-                    List<Comment> comments = commentRepository.findAllByItemId(itemId);
+                    List<CommentDto> comments = commentRepository.findAllByItemId(itemId).stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
                     log.info("Получен предмет с id " + itemId);
 
                     List<BookingForItemDto> bookings = item.getUser().getId() == ownerId
@@ -112,9 +115,10 @@ public class ItemServiceImpl implements ItemService {
 
         for (ItemDto item : allItems) {
 
-            List<Comment> comments = allCommentsByItemsOwner
+            List<CommentDto> comments = allCommentsByItemsOwner
                     .stream()
                     .filter(l -> l.getItem().getId() == item.getId())
+                    .map(CommentMapper::toCommentDto)
                     .collect(Collectors.toList());
             item.setComments(comments);
 
@@ -153,12 +157,10 @@ public class ItemServiceImpl implements ItemService {
             User author = userRepository.findById(authorId).orElseThrow(() -> new BadRequestException("Пользователь не найден"));
             Item item = itemRepository.findById(itemId).orElseThrow(() -> new BadRequestException("Предмет не найден"));
             Comment comment = new Comment();
-            comment.setAuthorId(authorId);
+            comment.setAuthor(author);
             comment.setItem(item);
             comment.setText(dto.getText());
             comment.setCreated(now);
-            comment.setAuthorName(author.getName());
-
             return commentRepository.save(comment);
         } else {
             throw new BadRequestException("Ошибка запроса");

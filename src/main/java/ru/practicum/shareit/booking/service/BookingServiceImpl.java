@@ -55,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
             booking.setStatus(Status.WAITING);
 
             Booking savedBooking = bookingRepository.save(booking);
-            return bookingMapper.toFullBookingFromBooking(savedBooking, Status.WAITING);
+            return bookingMapper.toFullBookingFromBooking(savedBooking);
         } else {
             throw new BadRequestException("Ошибка");
         }
@@ -101,9 +101,11 @@ public class BookingServiceImpl implements BookingService {
             status = Status.REJECTED;
         }
 
-        updatedBooking = bookingMapper.toBooking(dto, item, booker, status);
+        dto.setStatus(status);
 
-        return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status);
+        updatedBooking = bookingMapper.toBooking(dto, item, booker);
+
+        return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking));
     }
 
     @Transactional(readOnly = true)
@@ -122,8 +124,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }
 
-        Status status = booking.getStatus();
-        return bookingMapper.toFullBookingFromBooking(booking, status);
+        return bookingMapper.toFullBookingFromBooking(booking);
     }
 
     @Transactional(readOnly = true)
@@ -162,7 +163,7 @@ public class BookingServiceImpl implements BookingService {
             return bookings.stream()
                     .map(booking -> {
                         try {
-                            return bookingMapper.toFullBookingFromBooking(booking, booking.getStatus());
+                            return bookingMapper.toFullBookingFromBooking(booking);
                         } catch (NotFoundException e) {
                             return null;
                         }
@@ -208,7 +209,7 @@ public class BookingServiceImpl implements BookingService {
             return bookings.stream()
                     .map(booking -> {
                         try {
-                            return bookingMapper.toFullBookingFromBooking(booking, booking.getStatus());
+                            return bookingMapper.toFullBookingFromBooking(booking);
                         } catch (NotFoundException e) {
                             return null;
                         }

@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.dto;
 import lombok.RequiredArgsConstructor;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.model.enums.Status;
-import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -14,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemMapper {
 
-    public static ItemDto toGetItemDto(Item item, List<BookingForItemDto> bookings, List<Comment> comments) {
+    public static ItemDto toGetItemDto(Item item, List<BookingForItemDto> bookings, List<CommentDto> comments) {
         ItemDto getItemDto = new ItemDto();
         getItemDto.setId(item.getId());
         getItemDto.setName(item.getName());

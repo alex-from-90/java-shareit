@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.dto;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.enums.Status;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
@@ -33,11 +32,11 @@ public class BookingMapper {
                 .build();
     }
 
-    public Booking toBooking(BookingDto dto, Item item, User booker, Status status) {
-        return new Booking(dto.getId(), dto.getStart(), dto.getEnd(), item, booker, status);
+    public Booking toBooking(BookingDto dto, Item item, User booker) {
+        return new Booking(dto.getId(), dto.getStart(), dto.getEnd(), item, booker, dto.getStatus());
     }
 
-    public BookingDto toFullBookingFromBooking(Booking booking, Status status) throws NotFoundException {
+    public BookingDto toFullBookingFromBooking(Booking booking) throws NotFoundException {
         User booker = booking.getBooker();
         if (booker == null)
             throw new NotFoundException("Не найден пользователь");
@@ -53,7 +52,7 @@ public class BookingMapper {
                 .end(booking.getEnd())
                 .item(item)
                 .booker(booker)
-                .status(status)
+                .status(booking.getStatus())
                 .build();
     }
 }

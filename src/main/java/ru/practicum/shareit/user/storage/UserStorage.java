@@ -15,6 +15,5 @@ public interface UserStorage {
 
     void deleteById(Long userId) throws BadRequestException;
 
-
     User getById(long id) throws NotFoundException;
 }

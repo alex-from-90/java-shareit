@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import java.util.List;
+
+import static ru.practicum.shareit.item.dto.CommentMapper.toCommentDto;
 
 @Slf4j
 @RestController
@@ -60,10 +63,11 @@ public class ItemController {
     }
 
     @PostMapping("{itemId}/comment")
-    public Comment addComment(@RequestBody @Valid Comment dto, @PathVariable long itemId,
-                              @RequestHeader("X-Sharer-User-Id") long authorId)
+    public CommentDto addComment(@RequestBody @Valid Comment dto, @PathVariable long itemId,
+                                 @RequestHeader("X-Sharer-User-Id") long authorId)
             throws BadRequestException {
         log.info("Получен запрос POST /items/" + itemId + "/comment");
-        return itemService.addComment(dto, itemId, authorId);
+        Comment comment = itemService.addComment(dto, itemId, authorId);
+        return toCommentDto(comment);
     }
 }

@@ -26,7 +26,7 @@ public class ExceptionsHandler {
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<ErrorResponse> badRequestException(final NullPointerException e) {
+    public ResponseEntity<ErrorResponse> badRequestException(final Exception e) {
         log.error("badRequestException ", e);
         String error = "Bad request";
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(error));

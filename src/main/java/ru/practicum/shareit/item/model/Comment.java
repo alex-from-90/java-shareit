@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -32,7 +33,7 @@ public class Comment {
     @JoinColumn(name = "item_id")
     Item item;
 
-    @Column(name = "author_id")
-    long authorId;
-    String authorName;
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    User author;
 }
