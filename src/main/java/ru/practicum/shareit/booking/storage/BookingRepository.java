@@ -13,8 +13,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join User u on (u.id = b.bookerId)" +
-            " where b.bookerId = ?1 and b.end > ?2 and b.start < ?2"
+            " join User u on (u.id = b.booker.id)" +
+            " where b.booker.id = ?1 and b.end > ?2 and b.start < ?2"
     )
     List<Booking> findByBookerIdAndEndIsBeforeAndStartIsAfter(Long bookerId, LocalDateTime end,
                                                               LocalDateTime start, Sort sort);
@@ -23,7 +23,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join User u on (u.id = b.bookerId)" +
+            " join User u on (u.id = b.booker.id)" +
             " where u.id = ?1 and b.end < ?2"
     )
     List<Booking> findByBookerIdAndEndAfter(Long bookerId, LocalDateTime end, Sort sort);
@@ -34,7 +34,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1"
     )
@@ -42,14 +42,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " where i.id = ?1"
     )
     List<Booking> allBookingsForItem(Long itemId);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1 and b.end < ?2"
     )
@@ -57,15 +57,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
-            " where b.bookerId = ?1 and i.id = ?2 and b.end < ?3"
+            " where b.booker.id = ?1 and i.id = ?2 and b.end < ?3"
     )
     List<Booking> bookingsForItemAndBookerPast(Long bookerId, Long itemId, LocalDateTime now);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1 and b.start > ?2"
     )
@@ -73,21 +73,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1 and b.end >= ?2 and b.start < ?2"
     )
     List<Booking> bookingsForItemCurrent(Long ownerId, LocalDateTime now, Sort sort);
 
     @Query("select b from Booking b " +
-            "join Item i on i.id = b.itemId " +
+            "join Item i on i.id = b.item.id " +
             "join User u on u.id = i.user.id " +
             "where i.user.id = ?1")
     List<Booking> findAllByItemsOwnerId(Long ownerId);
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1 and b.status = 'WAITING'"
     )
@@ -95,9 +95,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(" select b" +
             " from Booking b " +
-            " join Item i on (i.id = b.itemId) " +
+            " join Item i on (i.id = b.item.id) " +
             " join User u on (u.id = i.user.id)" +
             " where i.user.id = ?1 and b.status = 'REJECTED'"
     )
     List<Booking> bookingsForItemRejected(Long ownerId, Sort sort);
+
+
 }

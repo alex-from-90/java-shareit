@@ -48,8 +48,8 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemIdDatabase.get();
         if (item.isAvailable() && dto.getEnd().isAfter(dto.getStart())) {
             Booking booking = new Booking();
-            booking.setBookerId(bookerId);
-            booking.setItemId(dto.getItemId());
+            booking.setBooker(booker.get());
+            booking.setItem(item);
             booking.setStart(dto.getStart());
             booking.setEnd(dto.getEnd());
             booking.setStatus(Status.WAITING);
@@ -73,9 +73,11 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingIdDatabase.get();
 
+        Item item;
         try {
-            Item item = itemRepository.findById(booking.getItemId())
-                    .orElseThrow(() -> new NotFoundException("Не найден владелец вещи"));
+            item = booking.getItem();
+            if(item == null)
+                throw new NotFoundException("Не найден владелец вещи");
             if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
             }
@@ -83,7 +85,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Не найден владелец вещи");
         }
 
-        long bookerId = booking.getBookerId();
+        User booker = booking.getBooker();
         BookingDto dto = bookingMapper.toBookingDto(booking);
         dto.setId(bookingId);
         Booking updatedBooking;
@@ -99,7 +101,7 @@ public class BookingServiceImpl implements BookingService {
             status = Status.REJECTED;
         }
 
-        updatedBooking = bookingMapper.toBooking(dto, bookerId, status);
+        updatedBooking = bookingMapper.toBooking(dto, item, booker, status);
 
         return bookingMapper.toFullBookingFromBooking(bookingRepository.save(updatedBooking), status);
     }
@@ -115,10 +117,8 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingIdDatabase.get();
 
-        if (booking.getBookerId() != bookerId &&
-                itemRepository.findById(booking.getItemId())
-                        .map(i -> i.getUser().getId())
-                        .orElse(-1L) != bookerId) {
+        if (booking.getBooker().getId() != bookerId &&
+                booking.getItem().getUser().getId() != bookerId) {
             throw new NotFoundException("Бронирование своей вещи невозможно");
         }
 

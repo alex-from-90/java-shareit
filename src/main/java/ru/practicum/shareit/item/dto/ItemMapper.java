@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.dto;
 
-import ru.practicum.shareit.booking.model.Booking;
+import lombok.RequiredArgsConstructor;
+import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.model.enums.Status;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -10,9 +11,10 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class ItemMapper {
 
-    public static ItemDto toGetItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
+    public static ItemDto toGetItemDto(Item item, List<BookingForItemDto> bookings, List<Comment> comments) {
         ItemDto getItemDto = new ItemDto();
         getItemDto.setId(item.getId());
         getItemDto.setName(item.getName());
@@ -24,13 +26,13 @@ public class ItemMapper {
 
             getItemDto.setLastBooking(bookings.stream()
                     .filter(booking -> booking.getStart().isBefore(now))
-                    .max(Comparator.comparing(Booking::getEnd))
+                    .max(Comparator.comparing(BookingForItemDto::getEnd))
                     .orElse(null));
 
             getItemDto.setNextBooking(bookings.stream()
                     .filter(booking -> booking.getStart().isAfter(now))
                     .filter(booking -> !booking.getStatus().equals(Status.REJECTED))
-                    .min(Comparator.comparing(Booking::getStart))
+                    .min(Comparator.comparing(BookingForItemDto::getStart))
                     .orElse(null));
         }
 

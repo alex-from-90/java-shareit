@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingForItemDto;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
@@ -34,6 +36,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final BookingMapper bookingMapper;
 
     @Override
     @Transactional
@@ -84,11 +87,12 @@ public class ItemServiceImpl implements ItemService {
                     List<Comment> comments = commentRepository.findAllByItemId(itemId);
                     log.info("Получен предмет с id " + itemId);
 
-                    List<Booking> bookings = item.getUser().getId() == ownerId
-                            ? Collections.unmodifiableList(bookingRepository.allBookingsForItem(itemId))
+                    List<BookingForItemDto> bookings = item.getUser().getId() == ownerId
+                            ? bookingRepository.allBookingsForItem(itemId)
+                            .stream().map(bookingMapper::toBookingForItemDto).collect(Collectors.toList())
                             : Collections.emptyList();
 
-                    return bookings.isEmpty() && item.getUser().getId() == ownerId
+                    return bookings.isEmpty() && item.getUser().getId()== ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
                 })
@@ -110,18 +114,18 @@ public class ItemServiceImpl implements ItemService {
 
             List<Comment> comments = allCommentsByItemsOwner
                     .stream()
-                    .filter(l -> l.getItemId() == item.getId())
+                    .filter(l -> l.getItem().getId() == item.getId())
                     .collect(Collectors.toList());
             item.setComments(comments);
 
             List<Booking> bookings = allBookingsByItemsOwner
                     .stream()
-                    .filter(l -> l.getItemId() == item.getId())
+                    .filter(l -> l.getItem().getId() == item.getId())
                     .collect(Collectors.toList());
 
             if (bookings.size() != 0) {
-                item.setLastBooking(bookings.get(0));
-                item.setNextBooking(bookings.get(bookings.size() - 1));
+                item.setLastBooking(bookingMapper.toBookingForItemDto(bookings.get(0)));
+                item.setNextBooking(bookingMapper.toBookingForItemDto(bookings.get(bookings.size() - 1)));
             }
         }
         return allItems;
@@ -147,10 +151,10 @@ public class ItemServiceImpl implements ItemService {
 
         if (!bookingRepository.bookingsForItemAndBookerPast(authorId, itemId, now).isEmpty()) {
             User author = userRepository.findById(authorId).orElseThrow(() -> new BadRequestException("Пользователь не найден"));
-
+            Item item = itemRepository.findById(itemId).orElseThrow(() -> new BadRequestException("Предмет не найден"));
             Comment comment = new Comment();
             comment.setAuthorId(authorId);
-            comment.setItemId(itemId);
+            comment.setItem(item);
             comment.setText(dto.getText());
             comment.setCreated(now);
             comment.setAuthorName(author.getName());
