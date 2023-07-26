@@ -39,11 +39,11 @@ public class BookingMapper {
 
     public BookingDto toFullBookingFromBooking(Booking booking, Status status) throws NotFoundException {
         User booker = booking.getBooker();
-        if(booker == null)
+        if (booker == null)
             throw new NotFoundException("Не найден пользователь");
 
         Item item = booking.getItem();
-        if(item == null)
+        if (item == null)
             throw new NotFoundException("Не найден предмет");
 
         return BookingDto.builder()

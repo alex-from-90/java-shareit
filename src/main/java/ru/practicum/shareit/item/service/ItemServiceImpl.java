@@ -92,7 +92,7 @@ public class ItemServiceImpl implements ItemService {
                             .stream().map(bookingMapper::toBookingForItemDto).collect(Collectors.toList())
                             : Collections.emptyList();
 
-                    return bookings.isEmpty() && item.getUser().getId()== ownerId
+                    return bookings.isEmpty() && item.getUser().getId() == ownerId
                             ? toGetItemDto(item, null, comments)
                             : toGetItemDto(item, bookings, comments);
                 })

@@ -76,7 +76,7 @@ public class BookingServiceImpl implements BookingService {
         Item item;
         try {
             item = booking.getItem();
-            if(item == null)
+            if (item == null)
                 throw new NotFoundException("Не найден владелец вещи");
             if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
