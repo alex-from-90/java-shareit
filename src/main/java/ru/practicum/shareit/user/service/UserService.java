@@ -54,7 +54,11 @@ public class UserService {
         }
 
         log.info("Обновлен пользователь с id " + id);
-        return userRepository.save(userToUpdate);
+        try {
+            return userRepository.save(userToUpdate);
+        } catch (Exception e) {
+            throw new ConflictException(e.getMessage());
+        }
     }
 
     public void delete(long id) {
