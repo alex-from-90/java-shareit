@@ -2,8 +2,10 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.OffsetPageable;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -18,6 +20,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
@@ -39,6 +43,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final BookingMapper bookingMapper;
 
     @Override
@@ -47,8 +52,12 @@ public class ItemServiceImpl implements ItemService {
         log.info("Добавлен предмет");
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        Item item = toItem(dto, owner);
-        item.setUser(owner); // Установка владельца для item
+        ItemRequest request = null;
+        if (dto.getRequestId() != null) {
+            request = itemRequestRepository.findById(dto.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Не найден запрос с id " + dto.getRequestId()));
+        }
+        Item item = toItem(dto, request, owner);
         itemRepository.save(item);
         return toItemDto(item);
     }
@@ -103,12 +112,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getAllItemsByOwner(long ownerId) {
-        List<ItemDto> allItems =
-                itemRepository.findAllByOwnerId(ownerId).stream()
-                        .map(l -> ItemMapper.toGetItemDto(l, null, null))
-                        .sorted(Comparator.comparing(ItemDto::getId))
-                        .collect(Collectors.toList());
+    public List<ItemDto> getAllItemsByOwner(long ownerId, int from, int size) {
+        List<ItemDto> allItems = itemRepository.findAllByOwnerId(ownerId, new OffsetPageable(from, size, Sort.by(Sort.Direction.ASC, "id"))).stream()
+                .map(l -> ItemMapper.toGetItemDto(l, null, null))
+                .sorted(Comparator.comparing(ItemDto::getId))
+                .collect(Collectors.toList());
 
         List<Comment> allCommentsByItemsOwner = commentRepository.findAllByItemsOwnerId(ownerId);
         List<Booking> allBookingsByItemsOwner = bookingRepository.findAllByItemsOwnerId(ownerId);
@@ -137,11 +145,11 @@ public class ItemServiceImpl implements ItemService {
 
 
     @Override
-    public List<ItemDto> searchItem(String text, long ownerId) {
+    public List<ItemDto> searchItem(String text, long ownerId, int from, int size) {
         if (text.isBlank()) {
             return List.of();
         } else {
-            return itemRepository.search(text).stream()
+            return itemRepository.search(text, new OffsetPageable(from, size, Sort.by(Sort.Direction.ASC, "id"))).stream()
                     .filter(Item::isAvailable)
                     .map(ItemMapper::toItemDto)
                     .collect(Collectors.toList());

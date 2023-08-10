@@ -15,7 +15,7 @@ public interface BookingService {
 
     BookingDto getBooking(long bookingId, long bookerId) throws NotFoundException;
 
-    List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state) throws NotFoundException;
+    List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state, int from, int size) throws NotFoundException;
 
-    List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state) throws NotFoundException;
+    List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state, int from, int size) throws NotFoundException;
 }

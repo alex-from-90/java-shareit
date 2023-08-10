@@ -1,9 +1,6 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
 
@@ -14,6 +11,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDto {
     long id;
@@ -31,4 +29,14 @@ public class ItemDto {
     BookingForItemDto lastBooking;
     BookingForItemDto nextBooking;
     List<CommentDto> comments;
+
+    Long requestId;
+
+    public ItemDto(long id, String name, String description, Boolean available, Long requestId) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.available = available;
+        this.requestId = requestId;
+    }
 }

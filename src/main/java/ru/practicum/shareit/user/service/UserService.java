@@ -3,6 +3,7 @@ package ru.practicum.shareit.user.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.model.User;
@@ -37,6 +38,10 @@ public class UserService {
         }
     }
 
+    public boolean existsById(long userId) {
+        return userRepository.existsById(userId);
+    }
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -61,6 +66,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void delete(long id) {
         log.info("Удалён User с id " + id);
         userRepository.deleteById(id);

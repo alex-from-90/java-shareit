@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,12 +19,14 @@ import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping(path = "/bookings")
 @AllArgsConstructor
+@Validated
 public class BookingController {
     private final BookingService bookingService;
 
@@ -52,17 +55,21 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDto> getAllBookingsByBookerId(@RequestHeader("X-Sharer-User-Id") long bookerId,
-                                                     @RequestParam(defaultValue = "ALL") BookingState state)
+                                                     @RequestParam(defaultValue = "ALL") BookingState state,
+                                                     @RequestParam(defaultValue = "0", required = false) @Min(0) int from,
+                                                     @RequestParam(defaultValue = "10", required = false) @Min(1) int size)
             throws NotFoundException {
         log.info("Получен запрос GET /bookings?state=" + state.toString());
-        return bookingService.getAllBookingsByBookerId(bookerId, state);
+        return bookingService.getAllBookingsByBookerId(bookerId, state, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getAllBookingItemsByBookerId(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                         @RequestParam(defaultValue = "ALL") BookingState state)
+                                                         @RequestParam(defaultValue = "ALL") BookingState state,
+                                                         @RequestParam(defaultValue = "0", required = false) @Min(0) int from,
+                                                         @RequestParam(defaultValue = "10", required = false) @Min(1) int size)
             throws NotFoundException {
         log.info("Получен запрос GET /bookings/owner?state=" + state.toString());
-        return bookingService.getAllBookingByItemsByOwnerId(ownerId, state);
+        return bookingService.getAllBookingByItemsByOwnerId(ownerId, state, from, size);
     }
 }

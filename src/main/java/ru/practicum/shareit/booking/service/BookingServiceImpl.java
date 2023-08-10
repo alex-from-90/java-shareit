@@ -2,9 +2,11 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.OffsetPageable;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -129,95 +131,99 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state) throws NotFoundException {
-        if (userRepository.existsById(bookerId)) {
-            List<Booking> bookings;
-            switch (state) {
-                case ALL:
-                    bookings = bookingRepository.findAllByBookerId(bookerId, Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case PAST:
-                    bookings = bookingRepository.findByBookerIdAndEndAfter(bookerId, LocalDateTime.now(),
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case FUTURE:
-                    bookings = bookingRepository.findByBookerIdAndStartAfter(bookerId, LocalDateTime.now(),
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case CURRENT:
-                    bookings = bookingRepository.findByBookerIdAndEndIsBeforeAndStartIsAfter(bookerId,
-                            LocalDateTime.now(), LocalDateTime.now(), Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case WAITING:
-                    bookings = bookingRepository.findAllByBookerIdAndStatus(bookerId, Status.WAITING,
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case REJECTED:
-                    bookings = bookingRepository.findAllByBookerIdAndStatus(bookerId, Status.REJECTED,
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                default:
-                    return Collections.emptyList();
-            }
+    public List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state, int from, int size) throws NotFoundException {
 
-            return bookings.stream()
-                    .map(booking -> {
-                        try {
-                            return bookingMapper.toFullBookingFromBooking(booking);
-                        } catch (NotFoundException e) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        } else {
+        if (!userRepository.existsById(bookerId))
             throw new NotFoundException("Не найден хозяин бронирования");
+
+        List<Booking> bookings;
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        Pageable pageable = new OffsetPageable(from, size, sort);
+        switch (state) {
+            case ALL:
+                bookings = bookingRepository.findAllByBookerId(bookerId, pageable);
+                break;
+            case PAST:
+                bookings = bookingRepository.findByBookerIdAndEndAfter(bookerId, LocalDateTime.now(),
+                        pageable);
+                break;
+            case FUTURE:
+                bookings = bookingRepository.findByBookerIdAndStartAfter(bookerId, LocalDateTime.now(),
+                        pageable);
+                break;
+            case CURRENT:
+                bookings = bookingRepository.findByBookerIdAndEndIsBeforeAndStartIsAfter(bookerId,
+                        LocalDateTime.now(), LocalDateTime.now(), pageable);
+                break;
+            case WAITING:
+                bookings = bookingRepository.findAllByBookerIdAndStatus(bookerId, Status.WAITING,
+                        pageable);
+                break;
+            case REJECTED:
+                bookings = bookingRepository.findAllByBookerIdAndStatus(bookerId, Status.REJECTED,
+                        pageable);
+                break;
+            default:
+                return Collections.emptyList();
         }
+
+        return bookings.stream()
+                .map(booking -> {
+                    try {
+                        return bookingMapper.toFullBookingFromBooking(booking);
+                    } catch (NotFoundException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state) throws NotFoundException {
-        if (userRepository.existsById(ownerId)) {
-            List<Booking> bookings;
-            switch (state) {
-                case ALL:
-                    bookings = bookingRepository.bookingsForItem(ownerId, Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case PAST:
-                    bookings = bookingRepository.bookingsForItemPast(ownerId, LocalDateTime.now(),
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case FUTURE:
-                    bookings = bookingRepository.bookingsForItemFuture(ownerId, LocalDateTime.now(),
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case CURRENT:
-                    bookings = bookingRepository.bookingsForItemCurrent(ownerId, LocalDateTime.now(),
-                            Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case WAITING:
-                    bookings = bookingRepository.bookingsForItemWaiting(ownerId, Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                case REJECTED:
-                    bookings = bookingRepository.bookingsForItemRejected(ownerId, Sort.by(Sort.Direction.DESC, "start"));
-                    break;
-                default:
-                    return Collections.emptyList();
-            }
+    public List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state, int from, int size) throws NotFoundException {
 
-            return bookings.stream()
-                    .map(booking -> {
-                        try {
-                            return bookingMapper.toFullBookingFromBooking(booking);
-                        } catch (NotFoundException e) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        } else {
+        if (!userRepository.existsById(ownerId))
             throw new NotFoundException("Не найден владелец вещи");
+
+        List<Booking> bookings;
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        Pageable pageable = new OffsetPageable(from, size, sort);
+        switch (state) {
+            case ALL:
+                bookings = bookingRepository.bookingsForItem(ownerId, pageable);
+                break;
+            case PAST:
+                bookings = bookingRepository.bookingsForItemPast(ownerId, LocalDateTime.now(),
+                        pageable);
+                break;
+            case FUTURE:
+                bookings = bookingRepository.bookingsForItemFuture(ownerId, LocalDateTime.now(),
+                        pageable);
+                break;
+            case CURRENT:
+                bookings = bookingRepository.bookingsForItemCurrent(ownerId, LocalDateTime.now(),
+                        pageable);
+                break;
+            case WAITING:
+                bookings = bookingRepository.bookingsForItemWaiting(ownerId, pageable);
+                break;
+            case REJECTED:
+                bookings = bookingRepository.bookingsForItemRejected(ownerId, pageable);
+                break;
+            default:
+                return Collections.emptyList();
         }
+
+        return bookings.stream()
+                .map(booking -> {
+                    try {
+                        return bookingMapper.toFullBookingFromBooking(booking);
+                    } catch (NotFoundException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }
