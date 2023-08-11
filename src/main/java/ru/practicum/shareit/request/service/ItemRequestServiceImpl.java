@@ -63,7 +63,4 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return ItemRequestMapper.toGetItemRequestDto(request);
     }
 
-    public ItemRepository getItemRepository() {
-        return itemRepository;
-    }
 }
