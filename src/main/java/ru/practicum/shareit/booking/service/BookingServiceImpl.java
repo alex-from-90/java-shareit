@@ -78,8 +78,9 @@ public class BookingServiceImpl implements BookingService {
         Item item;
         try {
             item = booking.getItem();
-            if (item == null)
+            if (item == null) {
                 throw new NotFoundException("Не найден владелец вещи");
+            }
             if (item.getUser().getId() != itemOwnerId) {
                 throw new NotFoundException("Не найден владелец вещи");
             }
@@ -133,8 +134,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllBookingsByBookerId(long bookerId, BookingState state, int from, int size) throws NotFoundException {
 
-        if (!userRepository.existsById(bookerId))
+        if (!userRepository.existsById(bookerId)) {
             throw new NotFoundException("Не найден хозяин бронирования");
+        }
 
         List<Booking> bookings;
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
@@ -183,16 +185,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllBookingByItemsByOwnerId(long ownerId, BookingState state, int from, int size) throws NotFoundException {
 
-        if (!userRepository.existsById(ownerId))
+        if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден владелец вещи");
+        }
 
         List<Booking> bookings;
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         Pageable pageable = new OffsetPageable(from, size, sort);
         switch (state) {
-            case ALL:
-                bookings = bookingRepository.bookingsForItem(ownerId, pageable);
-                break;
             case PAST:
                 bookings = bookingRepository.bookingsForItemPast(ownerId, LocalDateTime.now(),
                         pageable);
@@ -212,17 +212,11 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.bookingsForItemRejected(ownerId, pageable);
                 break;
             default:
-                return Collections.emptyList();
+                bookings = bookingRepository.bookingsForItem(ownerId, pageable);
         }
 
         return bookings.stream()
-                .map(booking -> {
-                    try {
-                        return bookingMapper.toFullBookingFromBooking(booking);
-                    } catch (NotFoundException e) {
-                        return null;
-                    }
-                })
+                .map(bookingMapper::toFullBookingFromBooking)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }

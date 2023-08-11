@@ -1,12 +1,11 @@
 package ru.practicum.shareit.booking;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -25,11 +24,12 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
@@ -40,12 +40,17 @@ public class BookingServiceTest {
     private BookingRepository bookingRepository;
     @Mock
     private UserRepository userRepository;
-    @MockBean
-    private final BookingMapper bookingMapper = new BookingMapper();
+    private BookingMapper bookingMapper;
     @Mock
     private ItemRepository itemRepository;
     @InjectMocks
     BookingServiceImpl bookingService;
+
+    @BeforeEach
+    void init() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingRepository, userRepository, itemRepository, bookingMapper);
+    }
 
     @Test
     void addBooking() throws NotFoundException {
@@ -151,6 +156,30 @@ public class BookingServiceTest {
     }
 
     @Test
+    void approveBookingNotBooking() throws NotFoundException {
+        long itemId = 1L;
+        long bookerId = 1L;
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> bookingService.approveBooking(bookerId, true, itemId));
+    }
+
+    @Test
+    void approveBookingOtherItemOwner() throws NotFoundException {
+        long itemId = 1L;
+        long bookerId = 1L;
+
+        User newUser = new User(1, "test", "test@test.com");
+        final ItemRequest request = new ItemRequest(0L, "description", newUser, null, LocalDateTime.now());
+        ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
+        Item item = ItemMapper.toItem(itemDto, request, newUser);
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        Booking booking = bookingMapper.toBooking(dto, item, newUser);
+
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
+        assertThrows(NotFoundException.class, () -> bookingService.approveBooking(bookerId, true, 2L));
+    }
+
+    @Test
     void approveBooking() throws NotFoundException {
         long itemId = 1L;
         long bookerId = 1L;
@@ -163,7 +192,8 @@ public class BookingServiceTest {
         Booking booking = bookingMapper.toBooking(dto, item, newUser);
 
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
-        assertThrows(NullPointerException.class, () -> bookingService.approveBooking(bookerId, true, itemId));
+        when(bookingRepository.save(any())).thenReturn(booking);
+        assertEquals(dto, bookingService.approveBooking(bookerId, true, newUser.getId()));
     }
 
     @Test
@@ -180,7 +210,7 @@ public class BookingServiceTest {
 
         Booking booking = bookingMapper.toBooking(dto, item, newUser);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
-        assertThrows(NullPointerException.class, () -> bookingService.getBooking(booking.getId(), bookerId));
+        assertEquals(dto, bookingService.getBooking(booking.getId(), bookerId));
     }
 
     @Test
@@ -215,21 +245,56 @@ public class BookingServiceTest {
         final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
         ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
         Item item = ItemMapper.toItem(itemDto, request, newUser);
-        new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
-        new PageImpl<>(List.of(item));
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.findAllByBookerId(anyLong(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
 
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.ALL, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.PAST, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.FUTURE, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.CURRENT, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.WAITING, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingsByBookerId(1,
-                BookingState.REJECTED, 0, 10));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingsByBookerId(newUser.getId(), BookingState.ALL, 0, 10));
+    }
+
+    @Test
+    void getPastBookings() throws NotFoundException {
+        long itemId = 1L;
+
+        User newUser = new User(1, "test", "test@test.com");
+        final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
+        ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
+        Item item = ItemMapper.toItem(itemDto, request, newUser);
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.findByBookerIdAndEndAfter(anyLong(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingsByBookerId(newUser.getId(), BookingState.PAST, 0, 10));
+    }
+
+    @Test
+    void getFutureBookings() throws NotFoundException {
+        long itemId = 1L;
+
+        User newUser = new User(1, "test", "test@test.com");
+        final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
+        ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
+        Item item = ItemMapper.toItem(itemDto, request, newUser);
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.findByBookerIdAndStartAfter(anyLong(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingsByBookerId(newUser.getId(), BookingState.FUTURE, 0, 10));
+    }
+
+    @Test
+    void getCurrentBookings() throws NotFoundException {
+        long itemId = 1L;
+
+        User newUser = new User(1, "test", "test@test.com");
+        final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
+        ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
+        Item item = ItemMapper.toItem(itemDto, request, newUser);
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.findByBookerIdAndEndIsBeforeAndStartIsAfter(anyLong(), any(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingsByBookerId(newUser.getId(), BookingState.CURRENT, 0, 10));
     }
 
     @Test
@@ -241,41 +306,48 @@ public class BookingServiceTest {
     @Test
     void getAllBookingsByItems() throws NotFoundException {
         long itemId = 1L;
-
         User newUser = new User(1, "test", "test@test.com");
         final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
         ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
         Item item = ItemMapper.toItem(itemDto, request, newUser);
-        new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
-        new PageImpl<>(List.of(item));
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.bookingsForItem(anyLong(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.ALL, 0, 10));
+    }
 
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.ALL, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.PAST, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.FUTURE, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.CURRENT, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.WAITING, 0, 10));
-        assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1,
-                BookingState.REJECTED, 0, 10));
+    @Test
+    void getPastBookingsByItems() throws NotFoundException {
+        long itemId = 1L;
+        User newUser = new User(1, "test", "test@test.com");
+        final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
+        ItemDto itemDto = new ItemDto(itemId, "TestItem", "DescriptionTest", true, request.getId());
+        Item item = ItemMapper.toItem(itemDto, request, newUser);
+        BookingDto dto = new BookingDto(1, itemId, LocalDateTime.now(), LocalDateTime.now().plusHours(1), item, newUser, Status.WAITING);
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(bookingRepository.bookingsForItemPast(anyLong(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+        when(bookingRepository.bookingsForItemFuture(anyLong(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+        when(bookingRepository.bookingsForItemCurrent(anyLong(), any(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+        when(bookingRepository.bookingsForItemWaiting(anyLong(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+        when(bookingRepository.bookingsForItemRejected(anyLong(), any())).thenReturn(Collections.singletonList(bookingMapper.toBooking(dto, item, newUser)));
+
+
+
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.PAST, 0, 10));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.FUTURE, 0, 10));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.CURRENT, 0, 10));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.WAITING, 0, 10));
+        assertEquals(Collections.singletonList(dto), bookingService.getAllBookingByItemsByOwnerId(1, BookingState.REJECTED, 0, 10));
     }
 
     @Test
     void getAllBookingsByItemsNotFoundUser() throws NotFoundException {
+        when(userRepository.existsById(anyLong())).thenReturn(false);
         assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1, BookingState.REJECTED, 0, 10));
     }
 
     @Test
     void fullBookingTest() {
-        User newUser = new User(1, "test", "test@test.com");
-        final ItemRequest request = new ItemRequest(0L, "description", new User(3, "test", "test@test.com"), null, LocalDateTime.now());
-        ItemDto itemDto = new ItemDto(1, "TestItem", "DescriptionTest", true, request.getId());
-        Item item = ItemMapper.toItem(itemDto, request, newUser);
-        new Booking(1, LocalDateTime.MIN, LocalDateTime.now(), item, newUser, Status.WAITING);
-
         assertThrows(NotFoundException.class, () -> bookingService.getAllBookingByItemsByOwnerId(1, BookingState.REJECTED, 0, 10));
     }
 

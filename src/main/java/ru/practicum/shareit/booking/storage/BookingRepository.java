@@ -100,6 +100,4 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             " where i.user.id = ?1 and b.status = 'REJECTED'"
     )
     List<Booking> bookingsForItemRejected(Long ownerId, Pageable pageable);
-
-
 }

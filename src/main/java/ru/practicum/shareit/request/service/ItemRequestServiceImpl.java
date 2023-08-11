@@ -62,5 +62,4 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .orElseThrow(() -> new NotFoundException("Запрос не найден"));
         return ItemRequestMapper.toGetItemRequestDto(request);
     }
-
 }
