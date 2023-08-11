@@ -16,13 +16,13 @@ public class OffsetPageable implements Pageable {
         this.from = from;
         this.size = size;
         this.sort = sort;
-        if(sort == null)
+        if (sort == null)
             this.sort = Sort.unsorted();
     }
 
     @Override
     public int getPageNumber() {
-        return from/size;
+        return from / size;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class OffsetPageable implements Pageable {
     @Override
     @NonNull
     public Pageable withPage(int pageNumber) {
-        return new OffsetPageable(pageNumber*size, size, sort);
+        return new OffsetPageable(pageNumber * size, size, sort);
     }
 
     @Override
