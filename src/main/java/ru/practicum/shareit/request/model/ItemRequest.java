@@ -34,10 +34,10 @@ public class ItemRequest {
 
     @ManyToOne
     @JoinColumn(name = "requester_id")
-    private User requester;
+    User requester;
 
     @OneToMany(mappedBy = "itemRequest", fetch = FetchType.EAGER)
-    private List<Item> items;
+    List<Item> items;
 
     LocalDateTime created;
 

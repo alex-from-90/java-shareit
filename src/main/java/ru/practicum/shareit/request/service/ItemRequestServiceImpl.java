@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.OffsetPageable;
+import ru.practicum.shareit.util.OffsetPageable;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.request.dto.GetItemRequestDto;
@@ -34,6 +34,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<GetItemRequestDto> getRequests(long userId) {
         if (!userService.existsById(userId))
             throw new NotFoundException("Не удалось вернуть ответы");
@@ -46,7 +47,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<GetItemRequestDto> getRequests(long userId, Integer from, Integer size) {
+        if (!userService.existsById(userId)) {
+            throw new NotFoundException("Данный ответ не существует");
+        }
         return itemRequestRepository.findAllByRequesterIdIsNot(userId, new OffsetPageable(from, size, Sort.by(Sort.Direction.ASC, "created")))
                 .stream()
                 .map(ItemRequestMapper::toGetItemRequestDto)
@@ -54,6 +59,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GetItemRequestDto getRequestById(long userId, long requestId) {
         if (!userService.existsById(userId)) {
             throw new NotFoundException("Данный ответ не существует");

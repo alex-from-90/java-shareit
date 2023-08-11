@@ -9,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -30,7 +29,6 @@ import java.util.Optional;
 
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
 public class ItemServiceIntegrationTest {
     @Mock
     private ItemRequestRepository itemRequestRepository;
@@ -44,6 +42,7 @@ public class ItemServiceIntegrationTest {
     @Mock
     private ItemRepository itemRepository;
 
+    @InjectMocks
     private ItemRequestServiceImpl itemRequestService;
 
     @BeforeEach
@@ -109,8 +108,7 @@ public class ItemServiceIntegrationTest {
         Integer size = 10;
         Mockito.when(userService.existsById(userId)).thenReturn(false);
 
-        Assertions.assertThrows(NullPointerException.class,
-                () -> itemRequestService.getRequests(userId, from, size));
+        Assertions.assertThrows(NotFoundException.class, () -> itemRequestService.getRequests(userId, from, size));
         Mockito.verify(itemRepository, Mockito.never()).findAllByRequesterIdIsNot(Mockito.anyLong());
     }
 

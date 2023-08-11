@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.util;
 
 import lombok.Setter;
 import org.springframework.data.domain.Pageable;

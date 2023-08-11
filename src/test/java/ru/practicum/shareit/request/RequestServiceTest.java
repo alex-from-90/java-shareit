@@ -5,8 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -36,9 +34,6 @@ public class RequestServiceTest {
     private UserService userService;
     @InjectMocks
     ItemRequestServiceImpl requestService;
-
-    public RequestServiceTest() {
-    }
 
     @Test
     public void testSetDescription() {
@@ -92,9 +87,8 @@ public class RequestServiceTest {
         Item item = ItemMapper.toItem(itemDto, request, newUser);
         request.setItems(Collections.singletonList(item));
         GetItemRequestDto getItemRequestDto = ItemRequestMapper.toGetItemRequestDto(request);
-        final Page<ItemRequest> page = new PageImpl<>(List.of(request));
-        when(itemRequestRepository.findAllByRequesterIdIsNot(anyLong(), any()))
-                .thenReturn(page);
+        when(userService.existsById(anyLong())).thenReturn(true);
+        when(itemRequestRepository.findAllByRequesterIdIsNot(anyLong(), any())).thenReturn(List.of(request));
         assertEquals(getItemRequestDto.getDescription(),
                 requestService.getRequests(userId, 0, 10).get(0).getDescription());
     }
