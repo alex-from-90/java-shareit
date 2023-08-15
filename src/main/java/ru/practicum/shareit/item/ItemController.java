@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 import static ru.practicum.shareit.item.dto.CommentMapper.toCommentDto;
@@ -27,6 +29,7 @@ import static ru.practicum.shareit.item.dto.CommentMapper.toCommentDto;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
@@ -51,15 +54,24 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsByOwner(@RequestHeader("X-Sharer-User-Id") long ownerId) {
+    public List<ItemDto> getAllItemsByOwner(
+            @RequestHeader("X-Sharer-User-Id") long ownerId,
+            @RequestParam(defaultValue = "0", required = false) @Min(0) int from,
+            @RequestParam(defaultValue = "10", required = false) @Min(1) int size
+    ) {
         log.info("Получен запрос GET /items");
-        return itemService.getAllItemsByOwner(ownerId);
+        return itemService.getAllItemsByOwner(ownerId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItem(@RequestParam String text, @RequestHeader("X-Sharer-User-Id") long ownerId) {
+    public List<ItemDto> searchItem(
+            @RequestParam String text,
+            @RequestHeader("X-Sharer-User-Id") long ownerId,
+            @RequestParam(defaultValue = "0", required = false) @Min(0) int from,
+            @RequestParam(defaultValue = "10", required = false) @Min(1) int size
+    ) {
         log.info(String.format("Получен запрос GET /items/search?text=%s", text));
-        return itemService.searchItem(text.toLowerCase(), ownerId);
+        return itemService.searchItem(text.toLowerCase(), ownerId, from, size);
     }
 
     @PostMapping("{itemId}/comment")

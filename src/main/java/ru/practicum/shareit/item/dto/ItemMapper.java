@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.model.enums.Status;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -45,16 +46,20 @@ public class ItemMapper {
         dto.setName(item.getName());
         dto.setDescription(item.getDescription());
         dto.setAvailable(item.isAvailable());
+        if (item.getItemRequest() != null) {
+            dto.setRequestId(item.getItemRequest().getId());
+        }
         return dto;
     }
 
-    public static Item toItem(ItemDto dto, User user) {
+    public static Item toItem(ItemDto dto, ItemRequest request, User user) {
         Item item = new Item();
         item.setId(dto.getId());
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setAvailable(dto.getAvailable());
         item.setUser(user);//Вещь юзера
+        item.setItemRequest(request);
         return item;
     }
 }
