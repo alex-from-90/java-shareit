@@ -45,9 +45,9 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDto> getAllBookingsByBookerId(@RequestHeader("X-Sharer-User-Id") long bookerId,
-                                                     @RequestParam(defaultValue = "ALL") BookingState state,
-                                                     @RequestParam(defaultValue = "0", required = false) int from,
-                                                     @RequestParam(defaultValue = "10", required = false) int size)
+                                                     @RequestParam BookingState state,
+                                                     @RequestParam int from,
+                                                     @RequestParam int size)
             throws NotFoundException {
         log.info("Получен запрос GET /bookings?state=" + state.toString());
         return bookingService.getAllBookingsByBookerId(bookerId, state, from, size);
@@ -55,9 +55,9 @@ public class BookingController {
 
     @GetMapping("/owner")
     public List<BookingDto> getAllBookingItemsByBookerId(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                         @RequestParam(defaultValue = "ALL") BookingState state,
-                                                         @RequestParam(defaultValue = "0", required = false) int from,
-                                                         @RequestParam(defaultValue = "10", required = false) int size)
+                                                         @RequestParam BookingState state,
+                                                         @RequestParam int from,
+                                                         @RequestParam int size)
             throws NotFoundException {
         log.info("Получен запрос GET /bookings/owner?state=" + state.toString());
         return bookingService.getAllBookingByItemsByOwnerId(ownerId, state, from, size);

@@ -37,8 +37,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public List<GetItemRequestDto> getRequests(
             @RequestHeader(header) long userId,
-            @RequestParam(required = false, defaultValue = "0") Integer from,
-            @RequestParam(required = false, defaultValue = "10") Integer size
+            @RequestParam Integer from,
+            @RequestParam Integer size
     ) {
         log.info("Получен запрос GET /requests/all?from=" + from + "&size=" + size);
         return itemRequestService.getRequests(userId, from, size);

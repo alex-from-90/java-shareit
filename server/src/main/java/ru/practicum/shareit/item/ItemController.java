@@ -45,8 +45,8 @@ public class ItemController {
     @GetMapping
     public List<ItemDto> getAllItemsByOwner(
             @RequestHeader("X-Sharer-User-Id") long ownerId,
-            @RequestParam(defaultValue = "0", required = false) int from,
-            @RequestParam(defaultValue = "10", required = false) int size
+            @RequestParam int from,
+            @RequestParam int size
     ) {
         log.info("Получен запрос GET /items");
         return itemService.getAllItemsByOwner(ownerId, from, size);
@@ -56,8 +56,8 @@ public class ItemController {
     public List<ItemDto> searchItem(
             @RequestParam String text,
             @RequestHeader("X-Sharer-User-Id") long ownerId,
-            @RequestParam(defaultValue = "0", required = false) int from,
-            @RequestParam(defaultValue = "10", required = false) int size
+            @RequestParam int from,
+            @RequestParam int size
     ) {
         log.info(String.format("Получен запрос GET /items/search?text=%s", text));
         return itemService.searchItem(text.toLowerCase(), ownerId, from, size);
